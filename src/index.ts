@@ -20,13 +20,14 @@ function nonNull<T>(item: T | null | undefined) {
 interface State {
   color: string;
   text: string;
+  shape: "circle" | "square";
 }
 
 class App {
   private _state: State;
 
   constructor() {
-    this._state = { color: "white", text: "" };
+    this._state = { color: "white", text: "", shape: "circle" };
   }
 
   view() {
@@ -71,8 +72,28 @@ class App {
               app._update({ ...app._state, text: input.value });
             }
           })
+        ),
+        makeOption(
+          "shape",
+          "Shape:",
+          m(
+            "select",
+            {
+              onchange: function() {
+                const input = <HTMLInputElement>this;
+                const shape = input.value;
+                if (shape !== "circle" && shape !== "square") {
+                  throw "Did not understand shape key '" + shape + "'";
+                }
+                app._update({ ...app._state, shape });
+              }
+            },
+            m("option", { value: "circle" }, "Circle"),
+            m("option", { value: "square" }, "Square")
+          )
         )
       ),
+      m("p", "To save: right click and select 'Save Image As...'"),
       m(
         "p",
         m("canvas", {
@@ -93,7 +114,26 @@ class App {
     const canvas = App.getCanvas();
     const ctx = nonNull(canvas.getContext("2d"));
     ctx.fillStyle = this._state.color;
-    ctx.fillRect(0, 0, 256, 256);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    switch (this._state.shape) {
+      case "square":
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        break;
+      case "circle":
+        ctx.beginPath();
+        ctx.arc(
+          canvas.width / 2,
+          canvas.height / 2,
+          canvas.width / 2,
+          0,
+          2 * Math.PI
+        );
+        ctx.fill();
+        break;
+      default:
+        throw "Did not understand shape key '" + this._state.shape + "'";
+    }
     ctx.fillStyle = "black";
     ctx.font = "30px Arial";
     ctx.textAlign = "center";
