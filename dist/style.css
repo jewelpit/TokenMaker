@@ -1,0 +1,18 @@
+input,
+select {
+  padding-right: 0;
+  width: 100%;
+}
+
+.tm-options-container {
+  max-width: 256px;
+}
+
+.tm-option {
+  display: flex;
+}
+
+.tm-option-input {
+  flex-grow: 1;
+  margin-left: 1em;
+}
