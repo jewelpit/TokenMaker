@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "outDir": "./dist/gen/",
+    "sourceMap": true,
+    "module": "commonjs",
+    "target": "es5",
+    "noImplicitReturns": true,
+    "strict": true
+  },
+  "include": ["./src/**/*"]
+}
