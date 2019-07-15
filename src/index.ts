@@ -55,7 +55,6 @@ class App {
     const app = this;
     return m(
       "div",
-      m("h1", "Token Maker"),
       m(
         ".tm-options-container",
         makeOption(
