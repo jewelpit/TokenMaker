@@ -8,8 +8,13 @@ select {
   max-width: 256px;
 }
 
-.tm-option {
+.tm-option,
+.tm-option-vert {
   display: flex;
+}
+
+.tm-option-vert {
+  flex-direction: column;
 }
 
 .tm-option-input {

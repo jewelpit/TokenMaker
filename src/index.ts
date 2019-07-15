@@ -39,9 +39,14 @@ class App {
   }
 
   view() {
-    function makeOption(id: string, text: string, inner: m.Vnode): m.Vnode {
+    function makeOption(
+      id: string,
+      text: string,
+      inner: m.Vnode,
+      lineBreak = false
+    ): m.Vnode {
       return m(
-        ".tm-option",
+        lineBreak ? ".tm-option-vert" : ".tm-option",
         m("label", { for: id, class: ".tm-option-label" }, text),
         m(".tm-option-input", inner)
       );
@@ -93,7 +98,8 @@ class App {
               const input = <HTMLTextAreaElement>this;
               app._update({ ...app._state, text: input.value });
             }
-          })
+          }),
+          true
         ),
         makeOption(
           "shape",
