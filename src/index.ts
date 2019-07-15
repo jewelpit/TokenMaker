@@ -18,16 +18,24 @@ function nonNull<T>(item: T | null | undefined) {
 }
 
 interface State {
-  color: string;
+  backgroundColor: string;
+  textColor: string;
   text: string;
   shape: "circle" | "square";
+  borderColor: null | string;
 }
 
 class App {
   private _state: State;
 
   constructor() {
-    this._state = { color: "white", text: "", shape: "circle" };
+    this._state = {
+      backgroundColor: "white",
+      textColor: "black",
+      text: "",
+      shape: "circle",
+      borderColor: null
+    };
   }
 
   view() {
@@ -53,13 +61,28 @@ class App {
             {
               onchange: function() {
                 const select = <HTMLSelectElement>this;
-                app._update({ ...app._state, color: select.value });
+                app._update({ ...app._state, backgroundColor: select.value });
               }
             },
             m("option", { value: "white" }, "White"),
             m("option", { value: "red" }, "Red"),
             m("option", { value: "green" }, "Green"),
             m("option", { value: "blue" }, "Blue")
+          )
+        ),
+        makeOption(
+          "text-color",
+          "Text color:",
+          m(
+            "select",
+            {
+              onchange: function() {
+                const select = <HTMLSelectElement>this;
+                app._update({ ...app._state, textColor: select.value });
+              }
+            },
+            m("option", { value: "black" }, "Black"),
+            m("option", { value: "white" }, "White")
           )
         ),
         makeOption(
@@ -90,6 +113,24 @@ class App {
             m("option", { value: "circle" }, "Circle"),
             m("option", { value: "square" }, "Square")
           )
+        ),
+        makeOption(
+          "border-color",
+          "Border color:",
+          m(
+            "select",
+            {
+              onchange: function() {
+                const input = <HTMLInputElement>this;
+                const borderColor = input.value === "none" ? null : input.value;
+                app._update({ ...app._state, borderColor });
+              }
+            },
+            m("option", { value: "none" }, "None"),
+            m("option", { value: "black" }, "Black"),
+            m("option", { value: "silver" }, "Silver"),
+            m("option", { value: "gold" }, "Gold")
+          )
         )
       ),
       m("p", "To save: right click and select 'Save Image As...'"),
@@ -112,12 +153,23 @@ class App {
   private _redraw() {
     const canvas = App.getCanvas();
     const ctx = nonNull(canvas.getContext("2d"));
-    ctx.fillStyle = this._state.color;
+    ctx.fillStyle = this._state.backgroundColor;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    const borderWidth = 12;
+    ctx.lineWidth = borderWidth;
     switch (this._state.shape) {
       case "square":
         ctx.fillRect(0, 0, canvas.width, canvas.height);
+        if (this._state.borderColor !== null) {
+          ctx.strokeStyle = this._state.borderColor;
+          ctx.strokeRect(
+            borderWidth / 2,
+            borderWidth / 2,
+            canvas.width - borderWidth,
+            canvas.height - borderWidth
+          );
+        }
         break;
       case "circle":
         ctx.beginPath();
@@ -129,6 +181,18 @@ class App {
           2 * Math.PI
         );
         ctx.fill();
+        if (this._state.borderColor !== null) {
+          ctx.strokeStyle = this._state.borderColor;
+          ctx.beginPath();
+          ctx.arc(
+            canvas.width / 2,
+            canvas.height / 2,
+            canvas.width / 2 - borderWidth / 2,
+            0,
+            2 * Math.PI
+          );
+          ctx.stroke();
+        }
         break;
       default:
         throw "Did not understand shape key '" + this._state.shape + "'";
