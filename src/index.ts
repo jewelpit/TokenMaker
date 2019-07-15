@@ -134,9 +134,19 @@ class App {
       default:
         throw "Did not understand shape key '" + this._state.shape + "'";
     }
+
+    const baseFontSize = 30;
+    const fontName = "Arial";
+    ctx.font = baseFontSize + "px " + fontName;
+    const textSize = ctx.measureText(this._state.text);
+    const multiplier = Math.min(
+      canvas.width / textSize.width,
+      canvas.height / (baseFontSize * 1.5)
+    );
+    ctx.font = Math.floor(baseFontSize * multiplier) + "px " + fontName;
     ctx.fillStyle = "black";
-    ctx.font = "30px Arial";
     ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
     ctx.fillText(this._state.text, canvas.width / 2, canvas.height / 2);
   }
 
