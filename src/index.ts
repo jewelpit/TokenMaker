@@ -214,13 +214,18 @@ class App {
     );
     const fontSize = Math.floor(baseFontSize * multiplier);
     ctx.font = fontSize + "px " + fontName;
-    ctx.fillStyle = "black";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     const stepSize = canvas.height / (lines.length + 1);
     for (var i = 0; i < lines.length; i++) {
       const line = lines[i];
+      ctx.fillStyle = this._state.textColor;
       ctx.fillText(line, canvas.width / 2, (i + 1) * stepSize);
+      if (this._state.textColor !== "black") {
+        ctx.strokeStyle = "black";
+        ctx.lineWidth = 1;
+        ctx.strokeText(line, canvas.width / 2, (i + 1) * stepSize);
+      }
     }
   }
 
