@@ -65,10 +65,9 @@ class App {
         makeOption(
           "text",
           "Text:",
-          m("input", {
-            type: "text",
+          m("textarea", {
             oninput: function() {
-              const input = <HTMLInputElement>this;
+              const input = <HTMLTextAreaElement>this;
               app._update({ ...app._state, text: input.value });
             }
           })
@@ -139,15 +138,21 @@ class App {
     const fontName = "Arial";
     ctx.font = baseFontSize + "px " + fontName;
     const textSize = ctx.measureText(this._state.text);
+    const lines = this._state.text.split(/\r?\n/);
     const multiplier = Math.min(
-      canvas.width / textSize.width,
-      canvas.height / (baseFontSize * 1.5)
+      ...lines.map(line => canvas.width / ctx.measureText(line).width),
+      canvas.height / (lines.length * baseFontSize * 1.5)
     );
-    ctx.font = Math.floor(baseFontSize * multiplier) + "px " + fontName;
+    const fontSize = Math.floor(baseFontSize * multiplier);
+    ctx.font = fontSize + "px " + fontName;
     ctx.fillStyle = "black";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText(this._state.text, canvas.width / 2, canvas.height / 2);
+    const stepSize = canvas.height / (lines.length + 1);
+    for (var i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      ctx.fillText(line, canvas.width / 2, (i + 1) * stepSize);
+    }
   }
 
   private _update(newState: State) {
