@@ -96,6 +96,10 @@ class App {
                     app._update({ ...app._state, customColor: input.value });
                   }
                 })
+              ),
+              m(
+                ".hint",
+                "All HTML color names, hex codes (#XXXXXX), rgb(XXX, XXX, XXX), and rgba(XXX, XXX, XXX, XXX) are supported."
               )
             ]
           : []),
