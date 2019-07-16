@@ -4,8 +4,8 @@ select {
   width: 100%;
 }
 
-.tm-options-container {
-  max-width: 256px;
+.wrapper {
+  max-width: 480px;
 }
 
 .tm-option,
@@ -25,4 +25,10 @@ select {
 .hint {
   font-size: 0.8em;
   font-style: italic;
+}
+
+#token_canvas {
+  padding: 0;
+  margin: auto;
+  display: block;
 }
