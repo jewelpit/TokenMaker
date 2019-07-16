@@ -18,7 +18,12 @@ function nonNull<T>(item: T | null | undefined) {
 }
 
 interface State {
-  backgroundColor: string;
+  backgroundColor: null | string;
+
+  // We store this as a separate field instead of using a variant type for
+  // backgroundColor because we want to preserve its values even when the user
+  // goes back to a built-in color.
+  customColor: string;
   textColor: string;
   text: string;
   shape: "circle" | "square";
@@ -31,6 +36,7 @@ class App {
   constructor() {
     this._state = {
       backgroundColor: "white",
+      customColor: "rgb(24, 45, 79)",
       textColor: "black",
       text: "",
       shape: "circle",
@@ -65,15 +71,34 @@ class App {
             {
               onchange: function() {
                 const select = <HTMLSelectElement>this;
-                app._update({ ...app._state, backgroundColor: select.value });
+                const backgroundColor =
+                  select.value == "custom" ? null : select.value;
+                app._update({ ...app._state, backgroundColor });
               }
             },
-            m("option", { value: "white" }, "White"),
+            m("option", { value: "custom" }, "Custom"),
+            m("option", { value: "white", selected: "selected" }, "White"),
             m("option", { value: "red" }, "Red"),
             m("option", { value: "green" }, "Green"),
             m("option", { value: "blue" }, "Blue")
           )
         ),
+        ...(app._state.backgroundColor == null
+          ? [
+              makeOption(
+                "custom-color",
+                "Custom color:",
+                m("input", {
+                  type: "text",
+                  value: app._state.customColor,
+                  oninput: function() {
+                    const input = <HTMLTextAreaElement>this;
+                    app._update({ ...app._state, customColor: input.value });
+                  }
+                })
+              )
+            ]
+          : []),
         makeOption(
           "text-color",
           "Text color:",
@@ -158,7 +183,7 @@ class App {
   private _redraw() {
     const canvas = App.getCanvas();
     const ctx = nonNull(canvas.getContext("2d"));
-    ctx.fillStyle = this._state.backgroundColor;
+    ctx.fillStyle = this._state.backgroundColor || this._state.customColor;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     const borderWidth = 12;
