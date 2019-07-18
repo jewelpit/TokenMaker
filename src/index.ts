@@ -250,11 +250,9 @@ class App {
       const line = lines[i];
       ctx.fillStyle = this._state.textColor;
       ctx.fillText(line, canvas.width / 2, (i + 1) * stepSize);
-      if (this._state.textColor !== "black") {
-        ctx.strokeStyle = "black";
-        ctx.lineWidth = 1;
-        ctx.strokeText(line, canvas.width / 2, (i + 1) * stepSize);
-      }
+      ctx.strokeStyle = this._state.textColor == "black" ? "white" : "black";
+      ctx.lineWidth = 1;
+      ctx.strokeText(line, canvas.width / 2, (i + 1) * stepSize);
     }
   }
 
