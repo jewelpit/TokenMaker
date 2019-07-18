@@ -92,7 +92,7 @@ class App {
                   type: "text",
                   value: app._state.customColor,
                   oninput: function() {
-                    const input = <HTMLTextAreaElement>this;
+                    const input = <HTMLInputElement>this;
                     app._update({ ...app._state, customColor: input.value });
                   }
                 })
