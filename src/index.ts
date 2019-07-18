@@ -122,6 +122,7 @@ class App {
           "text",
           "Text:",
           m("textarea", {
+            value: app._state.text,
             oninput: function() {
               const input = <HTMLTextAreaElement>this;
               app._update({ ...app._state, text: input.value });
