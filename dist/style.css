@@ -4,6 +4,10 @@ select {
   width: 100%;
 }
 
+input.tm-small-input {
+  width: auto;
+}
+
 .wrapper {
   max-width: 480px;
 }

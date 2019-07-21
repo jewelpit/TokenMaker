@@ -26,6 +26,7 @@ interface State {
   customColor: string;
   textColor: string;
   text: string;
+  stroke: boolean;
   shape: "circle" | "square";
   borderColor: null | string;
 }
@@ -39,6 +40,7 @@ class App {
       customColor: "rgb(24, 45, 79)",
       textColor: "black",
       text: "",
+      stroke: false,
       shape: "circle",
       borderColor: null
     };
@@ -129,6 +131,19 @@ class App {
             }
           }),
           true
+        ),
+        makeOption(
+          "stroke",
+          "Stroke text:",
+          m("input", {
+            class: "tm-small-input",
+            type: "checkbox",
+            ...(app._state.stroke ? { checked: "checked" } : {}),
+            oninput: function() {
+              const input = <HTMLInputElement>this;
+              app._update({ ...app._state, stroke: input.checked });
+            }
+          })
         ),
         makeOption(
           "shape",
@@ -236,7 +251,6 @@ class App {
     const baseFontSize = 30;
     const fontName = "Arial";
     ctx.font = baseFontSize + "px " + fontName;
-    const textSize = ctx.measureText(this._state.text);
     const lines = this._state.text.split(/\r?\n/);
     const multiplier = Math.min(
       ...lines.map(line => canvas.width / ctx.measureText(line).width),
@@ -251,9 +265,11 @@ class App {
       const line = lines[i];
       ctx.fillStyle = this._state.textColor;
       ctx.fillText(line, canvas.width / 2, (i + 1) * stepSize);
-      ctx.strokeStyle = this._state.textColor == "black" ? "white" : "black";
-      ctx.lineWidth = 1;
-      ctx.strokeText(line, canvas.width / 2, (i + 1) * stepSize);
+      if (this._state.stroke) {
+        ctx.strokeStyle = this._state.textColor == "black" ? "white" : "black";
+        ctx.lineWidth = 1;
+        ctx.strokeText(line, canvas.width / 2, (i + 1) * stepSize);
+      }
     }
   }
 
