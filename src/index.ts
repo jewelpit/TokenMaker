@@ -22,7 +22,10 @@ interface State {
     width: number;
     height: number;
   };
-  backgroundColor: null | string;
+  backgroundColor:
+    | { kind: "image" }
+    | { kind: "custom" }
+    | { kind: "builtin"; value: string };
 
   // We store this as a separate field instead of using a variant type for
   // backgroundColor because we want to preserve its values even when the user
@@ -44,7 +47,7 @@ class App {
         width: 256,
         height: 256
       },
-      backgroundColor: "white",
+      backgroundColor: { kind: "builtin", value: "white" },
       customColor: "rgb(24, 45, 79)",
       textColor: "black",
       text: "",
@@ -122,18 +125,30 @@ class App {
               onchange: function() {
                 const select = <HTMLSelectElement>this;
                 const backgroundColor =
-                  select.value == "custom" ? null : select.value;
+                  select.value == "custom"
+                    ? <{ kind: "custom" }>{ kind: "custom" }
+                    : select.value == "image"
+                    ? <{ kind: "image" }>{ kind: "image" }
+                    : <{ kind: "builtin"; value: string }>{
+                        kind: "builtin",
+                        value: select.value
+                      };
                 app._update({ ...app._state, backgroundColor });
               }
             },
-            m("option", { value: "custom" }, "Custom"),
-            m("option", { value: "white", selected: "selected" }, "White"),
-            m("option", { value: "red" }, "Red"),
-            m("option", { value: "green" }, "Green"),
-            m("option", { value: "blue" }, "Blue")
+            m("option", { value: "image" }, "Upload image"),
+            m("option", { value: "custom" }, "Custom color"),
+            m(
+              "optgroup",
+              { label: "Built-in colors" },
+              m("option", { value: "white", selected: "selected" }, "White"),
+              m("option", { value: "red" }, "Red"),
+              m("option", { value: "green" }, "Green"),
+              m("option", { value: "blue" }, "Blue")
+            )
           )
         ),
-        ...(app._state.backgroundColor == null
+        ...(app._state.backgroundColor.kind === "custom"
           ? [
               makeOption(
                 "custom-color",
@@ -153,6 +168,30 @@ class App {
               )
             ]
           : []),
+        m(
+          "div",
+          {
+            key: "background-image",
+            style:
+              app._state.backgroundColor.kind === "image"
+                ? "display:block;"
+                : "display:none;"
+          },
+          makeOption(
+            "background-image",
+            "Background image:",
+            m(
+              "div",
+              m("input", {
+                type: "file",
+                accept: "image/*",
+                oninput: function() {
+                  const input = <HTMLInputElement>this;
+                }
+              })
+            )
+          )
+        ),
         makeOption(
           "text-color",
           "Text color:",
@@ -254,49 +293,58 @@ class App {
     canvas.width = this._state.size.width;
     canvas.height = this._state.size.height;
     const ctx = nonNull(canvas.getContext("2d"));
-    ctx.fillStyle = this._state.backgroundColor || this._state.customColor;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    const borderWidth = canvas.width / 20;
-    ctx.lineWidth = borderWidth;
-    switch (this._state.shape) {
-      case "square":
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        if (this._state.borderColor !== null) {
-          ctx.strokeStyle = this._state.borderColor;
-          ctx.strokeRect(
-            borderWidth / 2,
-            borderWidth / 2,
-            canvas.width - borderWidth,
-            canvas.height - borderWidth
-          );
-        }
-        break;
-      case "circle":
-        ctx.beginPath();
-        ctx.arc(
-          canvas.width / 2,
-          canvas.height / 2,
-          canvas.width / 2,
-          0,
-          2 * Math.PI
-        );
-        ctx.fill();
-        if (this._state.borderColor !== null) {
-          ctx.strokeStyle = this._state.borderColor;
+    if (
+      this._state.backgroundColor.kind === "custom" ||
+      this._state.backgroundColor.kind === "builtin"
+    ) {
+      ctx.fillStyle =
+        this._state.backgroundColor.kind === "builtin"
+          ? this._state.backgroundColor.value
+          : this._state.customColor;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const borderWidth = canvas.width / 20;
+      ctx.lineWidth = borderWidth;
+      switch (this._state.shape) {
+        case "square":
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          if (this._state.borderColor !== null) {
+            ctx.strokeStyle = this._state.borderColor;
+            ctx.strokeRect(
+              borderWidth / 2,
+              borderWidth / 2,
+              canvas.width - borderWidth,
+              canvas.height - borderWidth
+            );
+          }
+          break;
+        case "circle":
           ctx.beginPath();
           ctx.arc(
             canvas.width / 2,
             canvas.height / 2,
-            canvas.width / 2 - borderWidth / 2,
+            canvas.width / 2,
             0,
             2 * Math.PI
           );
-          ctx.stroke();
-        }
-        break;
-      default:
-        throw "Did not understand shape key '" + this._state.shape + "'";
+          ctx.fill();
+          if (this._state.borderColor !== null) {
+            ctx.strokeStyle = this._state.borderColor;
+            ctx.beginPath();
+            ctx.arc(
+              canvas.width / 2,
+              canvas.height / 2,
+              canvas.width / 2 - borderWidth / 2,
+              0,
+              2 * Math.PI
+            );
+            ctx.stroke();
+          }
+          break;
+        default:
+          throw "Did not understand shape key '" + this._state.shape + "'";
+      }
     }
 
     const baseFontSize = 30;
