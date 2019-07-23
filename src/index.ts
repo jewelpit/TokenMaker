@@ -18,6 +18,10 @@ function nonNull<T>(item: T | null | undefined) {
 }
 
 interface State {
+  size: {
+    width: number;
+    height: number;
+  };
   backgroundColor: null | string;
 
   // We store this as a separate field instead of using a variant type for
@@ -36,6 +40,10 @@ class App {
 
   constructor() {
     this._state = {
+      size: {
+        width: 256,
+        height: 256
+      },
       backgroundColor: "white",
       customColor: "rgb(24, 45, 79)",
       textColor: "black",
@@ -65,6 +73,46 @@ class App {
       "div",
       m(
         ".tm-options-container",
+        makeOption(
+          "size",
+          "Token size:",
+          m(
+            "select",
+            {
+              onchange: function() {
+                const select = <HTMLSelectElement>this;
+                const size =
+                  select.value === "extra_small"
+                    ? 64
+                    : select.value === "small"
+                    ? 128
+                    : select.value === "medium"
+                    ? 256
+                    : select.value === "print"
+                    ? 300
+                    : select.value === "huge"
+                    ? 384
+                    : null;
+                if (size == null) {
+                  throw "Did not recognize size " + select.value;
+                }
+                app._update({
+                  ...app._state,
+                  size: { width: size, height: size }
+                });
+              }
+            },
+            m("option", { value: "extra_small" }, "Extra small (64x64)"),
+            m("option", { value: "small" }, "Small (128x128)"),
+            m(
+              "option",
+              { value: "medium", selected: "selected" },
+              "Medium (256x256)"
+            ),
+            m("option", { value: "print" }, "Print (300x300)"),
+            m("option", { value: "huge" }, "Large (384x384)")
+          )
+        ),
         makeOption(
           "bg-color",
           "Background color:",
@@ -188,8 +236,9 @@ class App {
         "p",
         m("canvas", {
           id: "token_canvas",
-          width: 256,
-          height: 256,
+          width: app._state.size.width,
+          height: app._state.size.height,
+          onupdate: _vnode => app._redraw(),
           style: "border:1px solid black"
         })
       )
@@ -202,11 +251,13 @@ class App {
 
   private _redraw() {
     const canvas = App.getCanvas();
+    canvas.width = this._state.size.width;
+    canvas.height = this._state.size.height;
     const ctx = nonNull(canvas.getContext("2d"));
     ctx.fillStyle = this._state.backgroundColor || this._state.customColor;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    const borderWidth = 12;
+    const borderWidth = canvas.width / 20;
     ctx.lineWidth = borderWidth;
     switch (this._state.shape) {
       case "square":
