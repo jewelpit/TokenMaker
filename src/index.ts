@@ -31,6 +31,10 @@ interface State {
   // backgroundColor because we want to preserve its values even when the user
   // goes back to a built-in color.
   customColor: string;
+
+  // Same with this.
+  backgroundImage: null | HTMLImageElement;
+
   textColor: string;
   text: string;
   stroke: boolean;
@@ -49,6 +53,7 @@ class App {
       },
       backgroundColor: { kind: "builtin", value: "white" },
       customColor: "rgb(24, 45, 79)",
+      backgroundImage: null,
       textColor: "black",
       text: "",
       stroke: false,
@@ -186,7 +191,15 @@ class App {
                 type: "file",
                 accept: "image/*",
                 oninput: function() {
-                  const input = <HTMLInputElement>this;
+                  const files = (<HTMLInputElement>this).files;
+                  if (files != null && files.length > 0) {
+                    const img = new Image();
+                    img.onload = function() {
+                      window.URL.revokeObjectURL(img.src);
+                      app._update({ ...app._state, backgroundImage: img });
+                    };
+                    img.src = window.URL.createObjectURL(files[0]);
+                  }
                 }
               })
             )
@@ -292,55 +305,87 @@ class App {
     const canvas = App.getCanvas();
     canvas.width = this._state.size.width;
     canvas.height = this._state.size.height;
-    const ctx = nonNull(canvas.getContext("2d"));
 
     if (
-      this._state.backgroundColor.kind === "custom" ||
-      this._state.backgroundColor.kind === "builtin"
+      this._state.backgroundColor.kind == "image" &&
+      this._state.backgroundImage != null
     ) {
-      ctx.fillStyle =
-        this._state.backgroundColor.kind === "builtin"
-          ? this._state.backgroundColor.value
-          : this._state.customColor;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const image = this._state.backgroundImage;
+      const imageScale = canvas.width / image.width;
+      canvas.height = image.height * imageScale;
+    }
 
+    const ctx = nonNull(canvas.getContext("2d"));
+
+    ctx.fillStyle =
+      this._state.backgroundColor.kind === "builtin"
+        ? this._state.backgroundColor.value
+        : this._state.customColor;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    switch (this._state.shape) {
+      case "square":
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        break;
+      case "circle":
+        ctx.beginPath();
+        ctx.ellipse(
+          canvas.width / 2,
+          canvas.height / 2,
+          canvas.width / 2,
+          canvas.height / 2,
+          0,
+          0,
+          2 * Math.PI
+        );
+        ctx.fill();
+        break;
+      default:
+        throw "Did not understand shape key '" + this._state.shape + "'";
+    }
+
+    if (
+      this._state.backgroundColor.kind == "image" &&
+      this._state.backgroundImage != null
+    ) {
+      const composite = ctx.globalCompositeOperation;
+      ctx.globalCompositeOperation = "source-in";
+      ctx.drawImage(
+        this._state.backgroundImage,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
+      ctx.globalCompositeOperation = composite;
+    }
+
+    if (this._state.borderColor !== null) {
       const borderWidth = canvas.width / 20;
       ctx.lineWidth = borderWidth;
       switch (this._state.shape) {
         case "square":
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-          if (this._state.borderColor !== null) {
-            ctx.strokeStyle = this._state.borderColor;
-            ctx.strokeRect(
-              borderWidth / 2,
-              borderWidth / 2,
-              canvas.width - borderWidth,
-              canvas.height - borderWidth
-            );
-          }
+          ctx.strokeStyle = this._state.borderColor;
+          ctx.strokeRect(
+            borderWidth / 2,
+            borderWidth / 2,
+            canvas.width - borderWidth,
+            canvas.height - borderWidth
+          );
           break;
         case "circle":
+          ctx.strokeStyle = this._state.borderColor;
           ctx.beginPath();
-          ctx.arc(
+          ctx.ellipse(
             canvas.width / 2,
             canvas.height / 2,
-            canvas.width / 2,
+            canvas.width / 2 - borderWidth / 2,
+            canvas.height / 2 - borderWidth / 2,
+            0,
             0,
             2 * Math.PI
           );
-          ctx.fill();
-          if (this._state.borderColor !== null) {
-            ctx.strokeStyle = this._state.borderColor;
-            ctx.beginPath();
-            ctx.arc(
-              canvas.width / 2,
-              canvas.height / 2,
-              canvas.width / 2 - borderWidth / 2,
-              0,
-              2 * Math.PI
-            );
-            ctx.stroke();
-          }
+          ctx.stroke();
           break;
         default:
           throw "Did not understand shape key '" + this._state.shape + "'";
