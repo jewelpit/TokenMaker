@@ -1,12 +1,13 @@
-import { App } from "./index";
+import { App, getSize } from "./index";
 import { getCanvas } from "./page";
 import { nonNull } from "./utils";
 
 export function redraw(app: App) {
   const state = app.state();
   const canvas = getCanvas();
-  canvas.width = state.size.width;
-  canvas.height = state.size.height;
+  const size = getSize(state);
+  canvas.width = size.width;
+  canvas.height = size.height;
 
   const { imageWidth, imageHeight } = (function() {
     if (
@@ -16,7 +17,7 @@ export function redraw(app: App) {
       const image = nonNull(state.backgroundImage);
       return { imageWidth: image.width, imageHeight: image.height };
     } else {
-      return { imageWidth: state.size.width, imageHeight: state.size.height };
+      return { imageWidth: size.width, imageHeight: size.height };
     }
   })();
   const imageScale = Math.min(
@@ -73,7 +74,7 @@ export function redraw(app: App) {
   }
 
   if (state.borderColor !== null) {
-    const borderWidth = canvas.width / 20;
+    const borderWidth = (canvas.width + canvas.height) / 40;
     ctx.lineWidth = borderWidth;
     switch (state.shape) {
       case "square":

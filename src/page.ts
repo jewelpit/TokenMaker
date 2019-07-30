@@ -1,6 +1,6 @@
 import * as m from "mithril";
 import { nonNull } from "./utils";
-import { App } from "./index";
+import { App, getSize } from "./index";
 import { redraw } from "./canvas";
 
 export function renderPage(app: App) {
@@ -29,27 +29,35 @@ export function renderPage(app: App) {
           {
             onchange: function() {
               const select = <HTMLSelectElement>this;
-              const size =
-                select.value === "extra_small"
-                  ? 64
-                  : select.value === "small"
-                  ? 128
-                  : select.value === "medium"
-                  ? 256
-                  : select.value === "print"
-                  ? 300
-                  : select.value === "huge"
-                  ? 384
-                  : null;
-              if (size == null) {
-                throw "Did not recognize size " + select.value;
+              if (select.value === "custom") {
+                app.update({ ...app.state(), size: { kind: "custom" } });
+              } else {
+                const size =
+                  select.value === "extra_small"
+                    ? 64
+                    : select.value === "small"
+                    ? 128
+                    : select.value === "medium"
+                    ? 256
+                    : select.value === "print"
+                    ? 300
+                    : select.value === "huge"
+                    ? 384
+                    : null;
+                if (size == null) {
+                  throw "Did not recognize size " + select.value;
+                }
+                app.update({
+                  ...app.state(),
+                  size: {
+                    kind: "builtin",
+                    value: { width: size, height: size }
+                  }
+                });
               }
-              app.update({
-                ...app.state(),
-                size: { width: size, height: size }
-              });
             }
           },
+          m("option", { value: "custom" }, "Custom size"),
           m("option", { value: "extra_small" }, "Extra small (64x64)"),
           m("option", { value: "small" }, "Small (128x128)"),
           m(
@@ -61,6 +69,63 @@ export function renderPage(app: App) {
           m("option", { value: "huge" }, "Large (384x384)")
         )
       ),
+      ...(app.state().size.kind === "custom"
+        ? [
+            m(
+              ".tm-flexrow",
+              m(
+                ".tm-flexgrow",
+                makeOption(
+                  "size-width",
+                  "Width:",
+                  m("input", {
+                    class: "tm-small-input",
+                    type: "number",
+                    min: 1,
+                    max: 384,
+                    value: app.state().customSize.width,
+                    oninput: function() {
+                      const input = <HTMLInputElement>this;
+                      const value = Math.min(input.valueAsNumber, 384);
+                      app.update({
+                        ...app.state(),
+                        customSize: {
+                          ...app.state().customSize,
+                          width: value
+                        }
+                      });
+                    }
+                  })
+                )
+              ),
+              m(
+                ".tm-flexgrow",
+                makeOption(
+                  "size-height",
+                  "Height:",
+                  m("input", {
+                    class: "tm-small-input",
+                    type: "number",
+                    min: 1,
+                    max: 384,
+                    value: app.state().customSize.height,
+                    oninput: function() {
+                      const input = <HTMLInputElement>this;
+                      const value = Math.min(input.valueAsNumber, 384);
+                      app.update({
+                        ...app.state(),
+                        customSize: {
+                          ...app.state().customSize,
+                          height: value
+                        }
+                      });
+                    }
+                  })
+                )
+              )
+            )
+          ]
+        : []),
       makeOption(
         "bg-color",
         "Background color:",
@@ -228,8 +293,8 @@ export function renderPage(app: App) {
       "p",
       m("canvas", {
         id: "token_canvas",
-        width: app.state().size.width,
-        height: app.state().size.height,
+        width: getSize(app.state()).width,
+        height: getSize(app.state()).height,
         onupdate: _vnode => redraw(app),
         style: "border:1px solid black"
       })
