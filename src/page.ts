@@ -292,6 +292,7 @@ export function renderPage(app: App) {
         )
       )
     ),
+    m(".tm-spacer"),
     m("p", "To save: right click and select 'Save Image As...'"),
     m(
       "p",
