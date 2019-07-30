@@ -8,31 +8,47 @@ export function redraw(app: App) {
   canvas.width = state.size.width;
   canvas.height = state.size.height;
 
-  if (state.backgroundColor.kind == "image" && state.backgroundImage != null) {
-    const image = nonNull(state.backgroundImage);
-    const imageScale = canvas.width / image.width;
-    canvas.height = image.height * imageScale;
-  }
+  const { imageWidth, imageHeight } = (function() {
+    if (
+      state.backgroundColor.kind == "image" &&
+      state.backgroundImage != null
+    ) {
+      const image = nonNull(state.backgroundImage);
+      return { imageWidth: image.width, imageHeight: image.height };
+    } else {
+      return { imageWidth: state.size.width, imageHeight: state.size.height };
+    }
+  })();
+  const imageScale = Math.min(
+    canvas.width / imageWidth,
+    canvas.height / imageHeight
+  );
+  const startX = canvas.width / 2 - (imageScale * imageWidth) / 2;
+  const startY = canvas.height / 2 - (imageScale * imageHeight) / 2;
+  const scaledWidth = imageWidth * imageScale;
+  const scaledHeight = imageHeight * imageScale;
 
   const ctx = nonNull(canvas.getContext("2d"));
 
   ctx.fillStyle =
     state.backgroundColor.kind === "builtin"
       ? state.backgroundColor.value
-      : state.customColor;
+      : state.backgroundColor.kind === "custom"
+      ? state.customColor
+      : "white";
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   switch (state.shape) {
     case "square":
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillRect(startX, startY, scaledWidth, scaledHeight);
       break;
     case "circle":
       ctx.beginPath();
       ctx.ellipse(
         canvas.width / 2,
         canvas.height / 2,
-        canvas.width / 2,
-        canvas.height / 2,
+        scaledWidth / 2,
+        scaledHeight / 2,
         0,
         0,
         2 * Math.PI
@@ -46,7 +62,13 @@ export function redraw(app: App) {
   if (state.backgroundColor.kind == "image" && state.backgroundImage != null) {
     const composite = ctx.globalCompositeOperation;
     ctx.globalCompositeOperation = "source-in";
-    ctx.drawImage(state.backgroundImage, 0, 0, canvas.width, canvas.height);
+    ctx.drawImage(
+      state.backgroundImage,
+      startX,
+      startY,
+      scaledWidth,
+      scaledHeight
+    );
     ctx.globalCompositeOperation = composite;
   }
 
@@ -57,10 +79,10 @@ export function redraw(app: App) {
       case "square":
         ctx.strokeStyle = state.borderColor;
         ctx.strokeRect(
-          borderWidth / 2,
-          borderWidth / 2,
-          canvas.width - borderWidth,
-          canvas.height - borderWidth
+          startX + borderWidth / 2,
+          startY + borderWidth / 2,
+          scaledWidth - borderWidth,
+          scaledHeight - borderWidth
         );
         break;
       case "circle":
@@ -69,8 +91,8 @@ export function redraw(app: App) {
         ctx.ellipse(
           canvas.width / 2,
           canvas.height / 2,
-          canvas.width / 2 - borderWidth / 2,
-          canvas.height / 2 - borderWidth / 2,
+          scaledWidth / 2 - borderWidth / 2,
+          scaledHeight / 2 - borderWidth / 2,
           0,
           0,
           2 * Math.PI
@@ -87,22 +109,24 @@ export function redraw(app: App) {
   ctx.font = baseFontSize + "px " + fontName;
   const lines = state.text.split(/\r?\n/);
   const multiplier = Math.min(
-    ...lines.map(line => canvas.width / ctx.measureText(line).width),
-    canvas.height / (lines.length * baseFontSize * 1.5)
+    ...lines.map(line => scaledWidth / ctx.measureText(line).width),
+    scaledHeight / (lines.length * baseFontSize * 1.5)
   );
   const fontSize = Math.floor(baseFontSize * multiplier);
   ctx.font = fontSize + "px " + fontName;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  const stepSize = canvas.height / (lines.length + 1);
+  const stepSize = scaledHeight / (lines.length + 1);
   for (var i = 0; i < lines.length; i++) {
     const line = lines[i];
+    const x = canvas.width / 2;
+    const y = (i + 1) * stepSize + startY;
     ctx.fillStyle = state.textColor;
-    ctx.fillText(line, canvas.width / 2, (i + 1) * stepSize);
+    ctx.fillText(line, x, y);
     if (state.stroke) {
       ctx.strokeStyle = state.textColor == "black" ? "white" : "black";
       ctx.lineWidth = 1;
-      ctx.strokeText(line, canvas.width / 2, (i + 1) * stepSize);
+      ctx.strokeText(line, x, y);
     }
   }
 }
