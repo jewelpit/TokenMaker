@@ -3,22 +3,27 @@ import { nonNull } from "./utils";
 import { renderPage } from "./page";
 import { redraw } from "./canvas";
 
+interface Size {
+  width: number;
+  height: number;
+}
+
 interface State {
-  size: {
-    width: number;
-    height: number;
-  };
+  size:
+    | {
+        kind: "custom";
+      }
+    | { kind: "builtin"; value: Size };
   backgroundColor:
     | { kind: "image" }
     | { kind: "custom" }
     | { kind: "builtin"; value: string };
 
-  // We store this as a separate field instead of using a variant type for
-  // backgroundColor because we want to preserve its values even when the user
-  // goes back to a built-in color.
+  // We store these as separate fields instead of using a variant type because
+  // we want to preserve their values even when the user goes back to a built-in
+  // one.
+  customSize: Size;
   customColor: string;
-
-  // Same with this.
   backgroundImage: null | HTMLImageElement;
 
   textColor: string;
@@ -28,16 +33,24 @@ interface State {
   borderColor: null | string;
 }
 
+export function getSize(state: State): Size {
+  return state.size.kind == "builtin" ? state.size.value : state.customSize;
+}
+
 export class App {
   private _state: State;
 
   constructor() {
     this._state = {
       size: {
-        width: 256,
-        height: 256
+        kind: "builtin",
+        value: {
+          width: 256,
+          height: 256
+        }
       },
       backgroundColor: { kind: "builtin", value: "white" },
+      customSize: { width: 256, height: 128 },
       customColor: "rgb(24, 45, 79)",
       backgroundImage: null,
       textColor: "black",

@@ -12,6 +12,14 @@ input.tm-small-input {
   max-width: 480px;
 }
 
+.tm-flexrow {
+  display: flex;
+}
+
+.tm-flexgrow {
+  flex-grow: 1;
+}
+
 .tm-option,
 .tm-option-vert {
   display: flex;
