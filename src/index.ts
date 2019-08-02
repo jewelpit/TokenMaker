@@ -25,6 +25,7 @@ interface State {
   customSize: Size;
   customColor: string;
   backgroundImage: null | HTMLImageElement;
+  stretchStyle: "fill" | "fit";
 
   textColor: string;
   text: string;
@@ -53,6 +54,7 @@ export class App {
       customSize: { width: 256, height: 128 },
       customColor: "rgb(24, 45, 79)",
       backgroundImage: null,
+      stretchStyle: "fill",
       textColor: "black",
       text: "",
       stroke: false,

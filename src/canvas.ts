@@ -20,14 +20,24 @@ export function redraw(app: App) {
       return { imageWidth: size.width, imageHeight: size.height };
     }
   })();
-  const imageScale = Math.min(
-    canvas.width / imageWidth,
-    canvas.height / imageHeight
-  );
+  const imageScale =
+    state.stretchStyle === "fill"
+      ? Math.max(canvas.width / imageWidth, canvas.height / imageHeight)
+      : Math.min(canvas.width / imageWidth, canvas.height / imageHeight);
+
+  // Don't use these unless you know what you're doing! They can go negative
+  // (used to draw images in "fill" mode), so unless you absolutely need that,
+  // use the clipped versions below.
   const startX = canvas.width / 2 - (imageScale * imageWidth) / 2;
   const startY = canvas.height / 2 - (imageScale * imageHeight) / 2;
   const scaledWidth = imageWidth * imageScale;
   const scaledHeight = imageHeight * imageScale;
+
+  // Clipped versions:
+  const clippedX = Math.max(0, startX);
+  const clippedY = Math.max(0, startY);
+  const clippedWidth = Math.min(canvas.width, scaledWidth);
+  const clippedHeight = Math.min(canvas.height, scaledHeight);
 
   const ctx = nonNull(canvas.getContext("2d"));
 
@@ -41,15 +51,15 @@ export function redraw(app: App) {
 
   switch (state.shape) {
     case "square":
-      ctx.fillRect(startX, startY, scaledWidth, scaledHeight);
+      ctx.fillRect(clippedX, clippedY, clippedWidth, clippedHeight);
       break;
     case "circle":
       ctx.beginPath();
       ctx.ellipse(
         canvas.width / 2,
         canvas.height / 2,
-        scaledWidth / 2,
-        scaledHeight / 2,
+        clippedWidth / 2,
+        clippedHeight / 2,
         0,
         0,
         2 * Math.PI
@@ -80,10 +90,10 @@ export function redraw(app: App) {
       case "square":
         ctx.strokeStyle = state.borderColor;
         ctx.strokeRect(
-          startX + borderWidth / 2,
-          startY + borderWidth / 2,
-          scaledWidth - borderWidth,
-          scaledHeight - borderWidth
+          clippedX + borderWidth / 2,
+          clippedY + borderWidth / 2,
+          clippedWidth - borderWidth,
+          clippedHeight - borderWidth
         );
         break;
       case "circle":
@@ -92,8 +102,8 @@ export function redraw(app: App) {
         ctx.ellipse(
           canvas.width / 2,
           canvas.height / 2,
-          scaledWidth / 2 - borderWidth / 2,
-          scaledHeight / 2 - borderWidth / 2,
+          clippedWidth / 2 - borderWidth / 2,
+          clippedHeight / 2 - borderWidth / 2,
           0,
           0,
           2 * Math.PI
@@ -110,18 +120,18 @@ export function redraw(app: App) {
   ctx.font = baseFontSize + "px " + fontName;
   const lines = state.text.split(/\r?\n/);
   const multiplier = Math.min(
-    ...lines.map(line => scaledWidth / ctx.measureText(line).width),
-    scaledHeight / (lines.length * baseFontSize * 1.5)
+    ...lines.map(line => clippedWidth / ctx.measureText(line).width),
+    clippedHeight / (lines.length * baseFontSize * 1.5)
   );
   const fontSize = Math.floor(baseFontSize * multiplier);
   ctx.font = fontSize + "px " + fontName;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  const stepSize = scaledHeight / (lines.length + 1);
+  const stepSize = clippedHeight / (lines.length + 1);
   for (var i = 0; i < lines.length; i++) {
     const line = lines[i];
     const x = canvas.width / 2;
-    const y = (i + 1) * stepSize + startY;
+    const y = (i + 1) * stepSize + clippedY;
     ctx.fillStyle = state.textColor;
     ctx.fillText(line, x, y);
     if (state.stroke) {

@@ -210,6 +210,25 @@ export function renderPage(app: App) {
               }
             })
           )
+        ),
+        makeOption(
+          "stretch-style",
+          "Stretch style:",
+          m(
+            "select",
+            {
+              onchange: function() {
+                const select = <HTMLSelectElement>this;
+                const stretchStyle = select.value;
+                if (stretchStyle !== "fill" && stretchStyle !== "fit") {
+                  throw "Did not recognize stretch style " + stretchStyle;
+                }
+                app.update({ ...app.state(), stretchStyle });
+              }
+            },
+            m("option", { value: "fill", selected: "selected" }, "Fill"),
+            m("option", { value: "fit" }, "Fit")
+          )
         )
       ),
       m("h6", "- Text -"),
