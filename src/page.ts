@@ -21,7 +21,7 @@ export function renderPage(app: App) {
     "div",
     m(
       ".tm-options-container",
-      m("h6", "➖ Size"),
+      m("h6", "- Size -"),
       makeOption(
         "size",
         "Token size:",
@@ -127,7 +127,7 @@ export function renderPage(app: App) {
             )
           ]
         : []),
-      m("h6", "➖ Background"),
+      m("h6", "- Background -"),
       makeOption(
         "bg-color",
         "Background color:",
@@ -212,7 +212,7 @@ export function renderPage(app: App) {
           )
         )
       ),
-      m("h6", "➖ Text"),
+      m("h6", "- Text -"),
       makeOption(
         "text-color",
         "Text color:",
@@ -253,7 +253,7 @@ export function renderPage(app: App) {
           }
         })
       ),
-      m("h6", "➖ Shape and border"),
+      m("h6", "- Shape and border -"),
       makeOption(
         "shape",
         "Shape:",
